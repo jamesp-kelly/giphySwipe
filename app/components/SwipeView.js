@@ -4,8 +4,10 @@ import {
   Text, 
   StyleSheet, 
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  TouchableHighlight
 } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import api from '../utils/api';
 import Card from './Card';
 
@@ -23,6 +25,10 @@ class SwipeView extends Component {
     this.loadGifs();
   }
 
+  static navigationOptions = {
+    title: 'giphySwipe',
+  };
+
   loadGifs() {
     api.getGifs()
       .then((res) => {
@@ -39,7 +45,12 @@ class SwipeView extends Component {
 
     return (
       <View style={styles.container}>
-        <View style={styles.box}>
+        <View style={styles.navButtons}>
+          <TouchableHighlight onPress={() => this.props.navigation.navigate('Settings')}>
+            <Icon style={styles.settings} name="gear" size={40} />
+          </TouchableHighlight>
+        </View>
+        <View style={styles.swipeContainer}>
           {
             this.state.isLoading ?
              <ActivityIndicator color='#fff' size='large' />
@@ -58,19 +69,25 @@ class SwipeView extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: 'column'
+  },
+  swipeContainer: {
+    height: '90%',
+    backgroundColor: 'yellow',
     alignItems: 'center',
     justifyContent: 'center'
   },
-  box: {
-    backgroundColor: '#333',
-    width: 350,
-    height: 350,
-    alignItems: 'center',
-    justifyContent: 'center'
+  navButtons: {
+    height: '10%',
+    backgroundColor: 'blue',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end'
   },
-  text: {
-    color: '#fff',
-    fontSize: 20
+  settings: {
+    marginTop: 10,
+    marginRight: 10,
+    color: '#fff'
   }
 });
 

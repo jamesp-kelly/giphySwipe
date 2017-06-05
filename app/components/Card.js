@@ -9,7 +9,7 @@ import {
 
 const Card = ({ imageUri, onImagePress }) => {
   return (
-      <View>
+      <View style={styles.card}>
         <TouchableHighlight style={styles.box} onPress={onImagePress}>
           <Image style={styles.image} source={{uri: imageUri}} />
         </TouchableHighlight>
@@ -26,6 +26,13 @@ const styles = StyleSheet.create({
   image: {
     width: 200,
     height: 200
+  },
+  card: {
+    backgroundColor: '#333',
+    width: 350,
+    height: 350,
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 });
 

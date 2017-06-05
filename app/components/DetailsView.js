@@ -6,6 +6,10 @@ import {
 } from 'react-native';
 
 class DetailsView extends Component {
+
+  static navigationOptions = {
+    title: 'Details',
+  };
   
   render() {
     return (
