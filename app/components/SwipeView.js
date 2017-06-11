@@ -22,6 +22,8 @@ class SwipeView extends Component {
       gifs: []
     };
 
+    this.handleCardSwiped = this.handleCardSwiped.bind(this);
+
     this.loadGifs();
   }
 
@@ -40,6 +42,12 @@ class SwipeView extends Component {
 
       })
   }
+
+  handleCardSwiped(direction) {
+    this.setState({
+      gifs: this.state.gifs.slice(1)
+    });
+  }
   
   render() {
 
@@ -55,10 +63,15 @@ class SwipeView extends Component {
             this.state.isLoading ?
              <ActivityIndicator color='#fff' size='large' />
             :
-            <Card 
-              imageUri={this.state.gifs[3].images.original.url} 
-              onImagePress={() => {}}
-            />
+            this.state.gifs.map((gif, index) => {
+              return <Card
+                key={gif.id}
+                stackIndex={index}
+                imageUri={gif.images.original.url}
+                onImagePress={() => {}}
+                onSwiped={this.handleCardSwiped}
+              />
+            })
           }
         </View>
       </View>
@@ -75,7 +88,7 @@ const styles = StyleSheet.create({
     height: '90%',
     backgroundColor: 'yellow',
     alignItems: 'center',
-    justifyContent: 'center'
+    paddingTop: 50,
   },
   navButtons: {
     height: '10%',

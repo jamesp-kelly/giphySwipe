@@ -67,6 +67,8 @@ class Card extends Component {
         duration: 400
       })
     ]).start();
+
+    this.props.onSwiped('left', 0);
   }
 
   flingCardRight() {
@@ -84,6 +86,8 @@ class Card extends Component {
         duration: 400
       })
     ]).start();
+
+    this.props.onSwiped('right', 0);
   }
 
   returnCardToCenter() {
@@ -108,10 +112,14 @@ class Card extends Component {
       {rotate: interpolateRotation}
     ];
 
-    const { imageUri, onImagePress } = this.props;
+    const { imageUri, onImagePress, stackIndex } = this.props;
+    const panHandlers = (stackIndex === 0) ? this.panResponder.panHandlers : {};
+    const stackIndexStyle = {
+      zIndex: 1000 - stackIndex
+    };
 
     return (
-      <Animated.View style={[styles.card, animatedStyle]} {...this.panResponder.panHandlers}>
+      <Animated.View style={[styles.card, animatedStyle, stackIndexStyle]} {...panHandlers}>
         <TouchableHighlight style={styles.box} onPress={onImagePress}>
           <Image style={styles.image} source={{uri: imageUri}} />
         </TouchableHighlight>
@@ -135,7 +143,8 @@ const styles = StyleSheet.create({
     width: 350,
     height: 350,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    marginBottom: -350
   }
 });
 
