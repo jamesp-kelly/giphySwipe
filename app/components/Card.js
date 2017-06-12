@@ -112,7 +112,7 @@ class Card extends Component {
       {rotate: interpolateRotation}
     ];
 
-    const { imageUri, onImagePress, stackIndex } = this.props;
+    const { imageUri, imageId, onImagePress, onImageLoaded, stackIndex } = this.props;
     const panHandlers = (stackIndex === 0) ? this.panResponder.panHandlers : {};
     const stackIndexStyle = {
       zIndex: 1000 - stackIndex
@@ -121,7 +121,11 @@ class Card extends Component {
     return (
       <Animated.View style={[styles.card, animatedStyle, stackIndexStyle]} {...panHandlers}>
         <TouchableHighlight style={styles.box} onPress={onImagePress}>
-          <Image style={styles.image} source={{uri: imageUri}} />
+          <Image 
+            style={styles.image} 
+            source={{uri: imageUri}}
+            onLoadEnd={() => onImageLoaded(imageId)}  
+          />
         </TouchableHighlight>
       </Animated.View>
     );

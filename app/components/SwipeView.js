@@ -17,12 +17,13 @@ class SwipeView extends Component {
     super(props);
 
     this.state = { 
-      isLoading: true,
+      displaySpinner: true,
       error: false,
-      gifs: []
+      gifsToSwipe: []
     };
 
     this.handleCardSwiped = this.handleCardSwiped.bind(this);
+    this.handleImageLoaded = this.handleImageLoaded.bind(this);
 
     this.loadGifs();
   }
@@ -35,18 +36,42 @@ class SwipeView extends Component {
     api.getGifs()
       .then((res) => {
         this.setState({
-          gifs: res.data,
-          isLoading: false
+          gifsToSwipe: res.data.map(gif => {
+            return {
+              ...gif,
+              loaded: false
+            };
+          }),
+          displaySpinner: false
         })
       }).catch((err) => {
-
+        console.error('Error getting gifs',err);
       })
   }
 
   handleCardSwiped(direction) {
     this.setState({
-      gifs: this.state.gifs.slice(1)
+      gifsToSwipe: this.state.gifsToSwipe.slice(1)
     });
+  }
+
+  handleImageLoaded(id) {
+    
+    const updatedGifsToSwipe = this.state.gifsToSwipe.map(gif => {
+      if (gif.id !== id) return gif;
+      return {
+        ...gif,
+        loaded: true
+      };
+    });
+
+    const displaySpinner = updatedGifsToSwipe.some(gif => !gif.loaded);
+
+    this.setState({
+      gifsToSwipe: updatedGifsToSwipe,
+      displaySpinner: displaySpinner
+    });
+
   }
   
   render() {
@@ -60,15 +85,14 @@ class SwipeView extends Component {
         </View>
         <View style={styles.swipeContainer}>
           {
-            this.state.isLoading ?
-             <ActivityIndicator color='#fff' size='large' />
-            :
-            this.state.gifs.map((gif, index) => {
+            this.state.gifsToSwipe.map((gif, index) => {
               return <Card
                 key={gif.id}
                 stackIndex={index}
                 imageUri={gif.images.original.url}
+                imageId={gif.id}
                 onImagePress={() => {}}
+                onImageLoaded={this.handleImageLoaded}
                 onSwiped={this.handleCardSwiped}
               />
             })
