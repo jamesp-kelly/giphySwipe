@@ -10,6 +10,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import api from '../utils/api';
 import Card from './Card';
+import { GIF_QUEUE_SIZE, REFILL_QUEUE_THRESHOLD, REFILL_POOL_THRESHOLD} from '../utils/constants';
 
 class SwipeView extends Component {
 
@@ -19,45 +20,73 @@ class SwipeView extends Component {
     this.state = { 
       displaySpinner: true,
       error: false,
-      gifsToSwipe: []
+      gifQueue: [],
+      gifPool: []
     };
 
     this.handleCardSwiped = this.handleCardSwiped.bind(this);
     this.handleImageLoaded = this.handleImageLoaded.bind(this);
 
-    this.loadGifs();
+    this.fillGifPool();
   }
 
   static navigationOptions = {
     title: 'giphySwipe',
   };
 
-  loadGifs() {
-    api.getGifs()
-      .then((res) => {
-        this.setState({
-          gifsToSwipe: res.data.map(gif => {
+  //we check if our queue is less than 5, if so call this and will move
+  fillGifQueue() {
+    this.setState((state, props) => {
+
+      const currentQueueCount = state.gifQueue.length; //if we have gifs in the queue, keep them
+
+      const pulledFromPool = state.gifPool.slice(0, GIF_QUEUE_SIZE - currentQueueCount);
+      const remainder = state.gifPool.slice(GIF_QUEUE_SIZE - currentQueueCount);
+      
+      return {
+        gifPool: remainder,
+        gifQueue: [
+          ...state.gifQueue,
+          ...pulledFromPool.map(gif => {
             return {
               ...gif,
               loaded: false
             };
-          }),
-          displaySpinner: false
-        })
+          })
+        ]
+      };
+    })
+
+  }
+
+  fillGifPool() {
+    api.getGifs()
+      .then((res) => {
+        this.setState({
+          gifPool: res.data,
+        }, this.fillGifQueue);
       }).catch((err) => {
         console.error('Error getting gifs',err);
       })
   }
 
   handleCardSwiped(direction) {
-    this.setState({
-      gifsToSwipe: this.state.gifsToSwipe.slice(1)
+    this.setState((state, ownProps) => {
+      console.log(`There are ${state.gifQueue.length - 1} gifs left in the queue`);
+      
+      return {
+        gifQueue: state.gifQueue.slice(1)
+      }
+    }, () => {
+      if (this.state.gifQueue.length < REFILL_QUEUE_THRESHOLD) {
+        this.fillGifQueue()
+      }
     });
   }
 
   handleImageLoaded(id) {
     
-    const updatedGifsToSwipe = this.state.gifsToSwipe.map(gif => {
+    const updatedgifQueue = this.state.gifQueue.map(gif => {
       if (gif.id !== id) return gif;
       return {
         ...gif,
@@ -65,13 +94,12 @@ class SwipeView extends Component {
       };
     });
 
-    const displaySpinner = updatedGifsToSwipe.some(gif => !gif.loaded);
+    const displaySpinner = updatedgifQueue.some(gif => !gif.loaded);
 
     this.setState({
-      gifsToSwipe: updatedGifsToSwipe,
+      gifQueue: updatedgifQueue,
       displaySpinner: displaySpinner
     });
-
   }
   
   render() {
@@ -85,7 +113,7 @@ class SwipeView extends Component {
         </View>
         <View style={styles.swipeContainer}>
           {
-            this.state.gifsToSwipe.map((gif, index) => {
+            this.state.gifQueue.map((gif, index) => {
               return <Card
                 key={gif.id}
                 stackIndex={index}
