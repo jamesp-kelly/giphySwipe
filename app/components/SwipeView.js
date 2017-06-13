@@ -10,7 +10,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import api from '../utils/api';
 import Card from './Card';
-import { GIF_QUEUE_SIZE, REFILL_QUEUE_THRESHOLD, REFILL_POOL_THRESHOLD} from '../utils/constants';
+import { GIF_QUEUE_SIZE, REFILL_QUEUE_THRESHOLD, REFILL_POOL_THRESHOLD } from '../utils/constants';
 
 class SwipeView extends Component {
 
@@ -21,7 +21,8 @@ class SwipeView extends Component {
       displaySpinner: true,
       error: false,
       gifQueue: [],
-      gifPool: []
+      gifPool: [],
+      apiOffset: 0
     };
 
     this.handleCardSwiped = this.handleCardSwiped.bind(this);
@@ -34,12 +35,10 @@ class SwipeView extends Component {
     title: 'giphySwipe',
   };
 
-  //we check if our queue is less than 5, if so call this and will move
   fillGifQueue() {
     this.setState((state, props) => {
 
-      const currentQueueCount = state.gifQueue.length; //if we have gifs in the queue, keep them
-
+      const currentQueueCount = state.gifQueue.length; 
       const pulledFromPool = state.gifPool.slice(0, GIF_QUEUE_SIZE - currentQueueCount);
       const remainder = state.gifPool.slice(GIF_QUEUE_SIZE - currentQueueCount);
       
@@ -55,16 +54,26 @@ class SwipeView extends Component {
           })
         ]
       };
-    })
-
+    });
   }
 
   fillGifPool() {
-    api.getGifs()
+    api.getGifs('funny cat', this.state.apiOffset)
       .then((res) => {
-        this.setState({
-          gifPool: res.data,
-        }, this.fillGifQueue);
+        this.setState((state, props) => {
+          return {
+            gifPool: res.data,
+            apiOffset: state.apiOffset + res.data.length
+          };
+        }, () => {
+          if (this.state.gifQueue.length < REFILL_QUEUE_THRESHOLD) {
+            this.fillGifQueue();
+          }
+        });
+      
+    
+  
+
       }).catch((err) => {
         console.error('Error getting gifs',err);
       })
@@ -78,8 +87,10 @@ class SwipeView extends Component {
         gifQueue: state.gifQueue.slice(1)
       }
     }, () => {
-      if (this.state.gifQueue.length < REFILL_QUEUE_THRESHOLD) {
-        this.fillGifQueue()
+      if (this.state.gifPool.length < REFILL_POOL_THRESHOLD) {
+        this.fillGifPool();
+      } else if (this.state.gifQueue.length < REFILL_QUEUE_THRESHOLD) {
+        this.fillGifQueue();
       }
     });
   }
